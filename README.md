@@ -15,7 +15,7 @@ SAGE-Vision makes **compute proportional to scene demand**: cheap sensors gate *
 
 ## System Overview
 
-<img width="1536" height="950" alt="System Architecture" src="https://github.com/user-attachments/assets/e013ed95-f943-4051-b0da-51b809678421" />
+<img width="1535" height="1024" alt="system architecture" src="https://github.com/user-attachments/assets/08cf8ed5-6626-4a62-a835-500d7dfbfe97" />
 
 The node runs **fully offline on the Pi alone**. Sensors wire directly to the 40-pin GPIO header (read by the `pigpio` background process — there is no microcontroller in the live path); a USB camera supplies frames; a two-thread core (sensor harvester + adaptive vision/FSM) does the work, with optional background threads for telemetry. Inference runs on `tflite-runtime` with INT8 YOLOv8-nano models.
 
