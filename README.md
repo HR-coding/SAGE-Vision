@@ -15,7 +15,7 @@ SAGE-Vision makes **compute proportional to scene demand**: cheap sensors gate *
 
 ## System Overview
 
-<img width="1535" height="1024" alt="system architecture" src="https://github.com/user-attachments/assets/08cf8ed5-6626-4a62-a835-500d7dfbfe97" />
+<img width="1536" height="1024" alt="system architecture" src="https://github.com/user-attachments/assets/a979793f-b895-45ea-ae34-89d4c9744bc0" />
 
 The node runs **fully offline on the Pi alone**. Sensors wire directly to the 40-pin GPIO header (read by the `pigpio` background process — there is no microcontroller in the live path); a USB camera supplies frames; a two-thread core (sensor harvester + adaptive vision/FSM) does the work, with optional background threads for telemetry. Inference runs on `tflite-runtime` with INT8 YOLOv8-nano models.
 
@@ -87,7 +87,7 @@ This bounds the cost of any single false positive (a spurious PIR from sunlight)
 
 Inference is controlled through a 5-state finite state machine.
 
-<img width="1536" height="1024" alt="state diagram" src="https://github.com/user-attachments/assets/7ed6ef6c-069a-4ba8-8faa-61dcaa48797a" />
+<img width="1536" height="1024" alt="fsm" src="https://github.com/user-attachments/assets/b699054a-7b78-44da-b771-eb3240cfbe9f" />
 
 1. **SLEEP** — no inference; the loop polls at ~0.5 s watching for a wake signal. Exits to **STANDBY** when the PIR fires or the ultrasonic reading **deviates from the learned background by more than `SONAR_WAKE_DELTA_CM`** (~45 cm — a real change in the scene, not a constant echo), held long enough to pass the debounce gate.
 2. **STANDBY** — a transitional state entered on waking; no inference. Polls fast (~0.05 s) to clear a brief warm-up (`STANDBY_WARMUP_S`, ~200 ms), then **always enters ACTIVE-LO** (it no longer branches on distance — see ACTIVE-LO for why).
