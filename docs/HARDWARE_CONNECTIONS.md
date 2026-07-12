@@ -8,16 +8,7 @@ This document covers every physical wire that needs to be made for the project. 
 
 ## Overview of What Connects Where
 
-```
-[HC-SR501 PIR]   OUT ──────────────────────── GPIO 17  (pin 11)  ┐
-[LM393 light]    DO  ──────────────────────── GPIO 27  (pin 13)  │
-[HC-SR04 TRIG]   ──────────────────────────── GPIO 23  (pin 16)  │  Raspberry Pi 4B
-[HC-SR04 ECHO]   ── voltage divider ────────── GPIO 24  (pin 18)  │   40-pin header
-                                                                  │
-                              USB-A port ──────────────────────── ┘
-                                   │
-                   Raspberry Pi official USB camera
-```
+<img width="1900" height="1411" alt="fig_circuit_diagram" src="https://github.com/user-attachments/assets/a5cf433e-7c07-4267-8eac-7d5fe29c6cd1" />
 
 All three sensors share the Pi's 5V / 3.3V / GND rails on the header. The HC-SR04's 5V ECHO line is the **only** signal that needs a voltage divider; every other signal pin is already 3.3 V-safe (see each section).
 
@@ -219,8 +210,4 @@ Before powering the system on, verify:
 - [ ] *(Optional)* Inline USB-C power meter plugged between the charger and the Pi's USB-C port (no GPIO wiring)
 - [ ] No bare wire ends that could short against the header or the board
 
----
 
-## Legacy: ESP32 RV-IoT Board Path (no longer used)
-
-Earlier revisions of this project read the sensors on an ESP32 RV-IoT Board and streamed a 7-byte packed binary struct to the Pi over USB serial. That firmware has since been **removed from the repository** and is not part of the current pipeline. For reference, the original ESP32 pin map was: PIR → GPIO 25, HC-SR04 TRIG → GPIO 26, HC-SR04 ECHO → GPIO 27 (via divider), on-board analog LDR → GPIO 39, with the board linked to the Pi by a single data-capable Micro-USB cable.
