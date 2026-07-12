@@ -2,7 +2,7 @@
 
 This document covers every physical wire that needs to be made for the project. Work through each section in order. **No soldering is required** — the sensors use jumper wires onto the Raspberry Pi's 40-pin GPIO header, and power is measured with a plug-in inline USB-C meter (Section 4) that needs no wiring at all.
 
-> **Architecture note:** The sensors now wire **directly to the Raspberry Pi 4B GPIO header**. The Pi reads the PIR, the LM393 light comparator, and the HC-SR04 ultrasonic sensor itself (via the `pigpio` daemon), so there is no longer an ESP32 microcontroller in the live data path. The original ESP32 firmware is retained under `firmware/` as **legacy** only — see the note at the end of this document.
+> **Architecture note:** The sensors now wire **directly to the Raspberry Pi 4B GPIO header**. The Pi reads the PIR, the LM393 light comparator, and the HC-SR04 ultrasonic sensor itself (via the `pigpio` daemon), so there is no longer an ESP32 microcontroller in the live data path. The earlier ESP32-based sensor path has since been removed from the repository — see the historical note at the end of this document.
 
 ---
 
@@ -149,7 +149,7 @@ Power is **read by hand off the meter's display** and noted against each run —
 
 ### Why an off-the-shelf meter (vs the earlier INA219 shunt rig)
 
-An earlier revision measured power with an INA219 shunt sensor tapped onto a pair of USB-C breakout boards over I²C. The inline meter replaces it entirely because it needs **no soldering, no CC-resistor bring-up, no I²C wiring, and no software** — you plug it in and read the number. The tradeoff is that the reading is **manual and off-device** (not timestamped into the telemetry), so power can't be correlated frame-by-frame with FSM state — only summarised per run. For the energy headline (average watts over a run) that is sufficient. See `docs/ENGINEERING_LOG.md` (P7) for the reasoning.
+An earlier revision measured power with an INA219 shunt sensor tapped onto a pair of USB-C breakout boards over I²C. The inline meter replaces it entirely because it needs **no soldering, no CC-resistor bring-up, no I²C wiring, and no software** — you plug it in and read the number. The tradeoff is that the reading is **manual and off-device** (not timestamped into the telemetry), so power can't be correlated frame-by-frame with FSM state — only summarised per run. For the energy headline (average watts over a run) that is sufficient.
 
 ---
 
@@ -223,4 +223,4 @@ Before powering the system on, verify:
 
 ## Legacy: ESP32 RV-IoT Board Path (no longer used)
 
-Earlier revisions of this project read the sensors on an ESP32 RV-IoT Board and streamed a 7-byte packed binary struct to the Pi over USB serial. That firmware (`firmware/esp32_sensor_node/esp32_sensor_node.ino`) is **kept for reference only** and is not part of the current pipeline. If you ever revert to it, the original ESP32 pin map was: PIR → GPIO 25, HC-SR04 TRIG → GPIO 26, HC-SR04 ECHO → GPIO 27 (via divider), on-board analog LDR → GPIO 39, with the board linked to the Pi by a single data-capable Micro-USB cable.
+Earlier revisions of this project read the sensors on an ESP32 RV-IoT Board and streamed a 7-byte packed binary struct to the Pi over USB serial. That firmware has since been **removed from the repository** and is not part of the current pipeline. For reference, the original ESP32 pin map was: PIR → GPIO 25, HC-SR04 TRIG → GPIO 26, HC-SR04 ECHO → GPIO 27 (via divider), on-board analog LDR → GPIO 39, with the board linked to the Pi by a single data-capable Micro-USB cable.

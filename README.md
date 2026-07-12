@@ -69,7 +69,7 @@ Each sensor has a distinct role, and the readings are filtered before use:
 
 **Keep-awake is a logical OR; the expensive state is not.** Any one signal — PIR motion, an ultrasonic **deviation from the static background** (`|distance − background| > SONAR_BG_DELTA_CM`, ~30 cm), or a YOLO person-detection (the **vision vote**) — keeps the node *awake*; absence is declared only when **all three** have been quiet for `PRESENCE_TIMEOUT_S` (~12 s). The vision vote is what distinguishes a **still occupant** (no motion, but detected) from an empty room — the failure mode of motion-only systems.
 
-> **Why a deviation, not an absolute distance?** A rangefinder never sees an empty room — a wall, furniture, or a sensor artifact always returns *something*, so an absolute `distance < threshold` is permanently true and the node can never declare absence. Sonar presence is therefore **background subtraction**: a person is a *change* from the learned empty-scene distance, and any constant reading is absorbed into the background and stops holding the node awake. See `docs/ENGINEERING_LOG.md` (P10).
+> **Why a deviation, not an absolute distance?** A rangefinder never sees an empty room — a wall, furniture, or a sensor artifact always returns *something*, so an absolute `distance < threshold` is permanently true and the node can never declare absence. Sonar presence is therefore **background subtraction**: a person is a *change* from the learned empty-scene distance, and any constant reading is absorbed into the background and stops holding the node awake.
 
 But the three signals are **not equally trustworthy**, so they do not equally unlock the expensive ACTIVE-HI state (**tiered presence**):
 
@@ -79,7 +79,7 @@ But the three signals are **not equally trustworthy**, so they do not equally un
 | **Proximity** (a sonar deviation from background) | a real *object* (maybe furniture) | only a **time-limited HI probe** — demoted to LO if vision stays silent |
 | **PIR** (motion) | a heat/motion *change* (maybe sunlight) | no — wakes + keeps a cheap LO probe only |
 
-This bounds the cost of any single false positive (a spurious PIR from sunlight) to the cheap LO probe, while still giving a genuinely *far* person the high-resolution look needed to detect them. (Static furniture no longer even reaches this stage — it is absorbed into the sonar background and stops voting presence entirely; P10.) And because the LO probe keeps running inference, a person who later (re-)appears is re-detected by the vision vote and escalated back to HI — the demotion is **self-correcting**. See `docs/ENGINEERING_LOG.md` (P9) for the worked edge cases.
+This bounds the cost of any single false positive (a spurious PIR from sunlight) to the cheap LO probe, while still giving a genuinely *far* person the high-resolution look needed to detect them. (Static furniture no longer even reaches this stage — it is absorbed into the sonar background and stops voting presence entirely.) And because the LO probe keeps running inference, a person who later (re-)appears is re-detected by the vision vote and escalated back to HI — the demotion is **self-correcting**.
 
 ---
 
@@ -242,11 +242,10 @@ The node measures the **deterministic** part — `T_confirm + T_warmup + T_infer
 
 ## Limitations & Future Work
 
-- The 640 INT8 model previously saturated (an INT8 calibration issue); it has been **re-exported with COCO128 calibration** (`rpi_edge/export_yolo_int8.py`) — verify on-device (Netron + a live run) before fully trusting ACTIVE-HI accuracy.
-- **PIR and LDR are not health-monitorable** — a dead pin reads as a quiet/lit room and is invisible to the WATCHDOG (only the ultrasonic sensor is observable). An *out-of-range* echo (an empty room) still returns a valid pulse and counts as healthy.
-- `is_dark` has **no software debounce**, so CLAHE can toggle frame-to-frame at the light threshold (it relies on the LM393's hardware hysteresis).
-- The median distance filter adds ~0.12 s of lag (accepted for stability).
-- The energy and thermal benefit has been **measured** against the always-on baseline: mean whole-Pi power fell 24 % (4.1 W → 3.1 W) and steady-state SoC temperature fell 7 °C (57 °C → 50 °C), with detection quality preserved. Because the saving accrues only during vacancy, these are conservative lower bounds that grow with the vacant fraction of the schedule.
+- **INT8 YOLOv8-nano accuracy.** The quantized nano model is weaker on small, distant, or heavily occluded objects than larger detectors. Future work: more efficient models that raise precision without raising power. (The 640 model's earlier INT8 calibration saturation was fixed by re-exporting with COCO128 calibration.)
+- **Stationary, occluded occupant.** Presence can still miss someone who is simultaneously motionless (no PIR), out of the detector's reach (heavy occlusion or darkness), and lingering long enough to be absorbed into the sonar background. A person-specific static sensor such as mmWave radar would close this gap.
+- **Non-monitorable sensors + ultrasonic noise.** PIR and LM393 faults cannot be detected — a dead pin reads as a quiet/lit room, invisible to the WATCHDOG (only the ultrasonic sensor is observable). Ultrasonic noise can also cause occasional spurious wakes, which trims the realised energy saving. Automated sensor-health diagnostics would help.
+- **Single-point ranging.** One ultrasonic distance cannot represent scenes with multiple objects at different depths. Future work: object-level adaptive resolution driven from the camera itself.
 
 ---
 
@@ -254,16 +253,10 @@ The node measures the **deterministic** part — `T_confirm + T_warmup + T_infer
 
 ```
 SAGE-Vision/
-├── firmware/
-│   └── esp32_sensor_node/
-│       └── esp32_sensor_node.ino          # LEGACY — original ESP32 sensor transmitter (unused)
 ├── rpi_edge/
 │   ├── pi_edge_node.py                    # Main adaptive inference node (reads GPIO sensors)
 │   ├── yolo_tflite.py                     # Lightweight tflite-runtime YOLOv8 detector
 │   ├── requirements.txt                   # Pi Python dependencies
-│   ├── .env.example                       # Template for the ThingSpeak key (copy to .env)
-│   ├── export_yolo_int8.py                # Off-device: re-export calibrated INT8 TFLite models
-│   ├── coco128.yaml                       # Calibration dataset config for the export
 │   ├── yolov8n_320_int8.tflite            # INT8 TFLite model — 320×320 (ACTIVE-LO)
 │   └── yolov8n_640_int8.tflite            # INT8 TFLite model — 640×640 (ACTIVE-HI / WATCHDOG)
 ├── test/
@@ -272,11 +265,10 @@ SAGE-Vision/
 ├── docs/
 │   ├── SETUP.md                           # Installation and execution guide
 │   ├── TESTING.md                         # Benchmarking and validation procedure
-│   ├── HARDWARE_CONNECTIONS.md            # Wiring tables for all sensors + power-meter placement
-│   └── ENGINEERING_LOG.md                 # Problems faced, solutions, tradeoffs, limitations
-├── snapshots/                             # Detection JPEGs (created at runtime; git-ignored)
+│   └── HARDWARE_CONNECTIONS.md            # Wiring tables for all sensors + power-meter placement
 ├── .env.example                           # Template for the ThingSpeak key (copy to .env)
 ├── .gitignore
+├── LICENSE                                # MIT license (project code)
 └── README.md                              # This file — project overview & architecture
 ```
 
@@ -296,7 +288,7 @@ SAGE-Vision/
 | Telemetry record + non-blocking sinks | Terminal always; cloud/snapshot sinks drop in without touching the FSM |
 | Direct GPIO sensors via `pigpio` | Removes the ESP32 and serial link; hardware-timestamped echo edges keep distance accurate |
 | Two pinned threads + core affinity | Isolates GPIO sensor I/O jitter from the inference loop's timing |
-| Sensor-fused presence (PIR ∨ sonar-deviation ∨ vision vote) | A still person is invisible to PIR alone; fusion prevents false SLEEP. Sonar votes on a *deviation from background*, not an absolute distance, so a wall/phantom can't pin the node awake (P10) |
+| Sensor-fused presence (PIR ∨ sonar-deviation ∨ vision vote) | A still person is invisible to PIR alone; fusion prevents false SLEEP. Sonar votes on a *deviation from background*, not an absolute distance, so a wall/phantom can't pin the node awake |
 | Timed TransitionGate on every edge | Debounce behaves identically regardless of per-state loop pace; kills flicker |
 | Two fixed-resolution INT8 models | Full-integer export bakes input size; switching models is the adaptive resolution |
 | INT8 TFLite over FP32 PyTorch | 2–4× lower inference time on ARM Neon; no GPU required |

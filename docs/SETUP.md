@@ -17,7 +17,7 @@ This document covers everything from flashing the OS to running the live pipelin
   - HC-SR04 Ultrasonic Sensor — Trigger → **GPIO 23**, Echo → **GPIO 24** *(via 1 kΩ / 2 kΩ voltage divider to step the 5V echo line down to 3.3V)*
   - *(Optional, for the energy benchmark)* a plug-in inline USB-C power meter on the Pi's 5V feed — read by hand, no GPIO wiring or software
 
-> The sensors connect to the Pi directly — there is **no ESP32 in the live pipeline**. The original ESP32 firmware is retained under `firmware/` as legacy only and is not part of setup. The system runs **fully offline on the Pi alone** — no second machine is involved in live operation.
+> The sensors connect to the Pi directly — there is **no ESP32 in the live pipeline**. The earlier ESP32-based sensor path has been removed from the repository and is not part of setup. The system runs **fully offline on the Pi alone** — no second machine is involved in live operation.
 
 ---
 
@@ -174,7 +174,7 @@ By default the node is fully offline. To additionally stream telemetry to a [Thi
 2. **Copy the channel's Write API Key** (channel → *API Keys* tab).
 3. **Create the `.env` file** on the Pi from the committed template and paste your key in. It can live in the **project root** or in **`rpi_edge/`** — the loader checks the root first, then `rpi_edge/`:
    ```bash
-   cp .env.example .env     # project root (or: cp rpi_edge/.env.example rpi_edge/.env)
+   cp .env.example .env     # in the project root
    nano .env                # set THINGSPEAK_API_KEY=<your write key>
    ```
    `.env` is git-ignored in both locations, so the key is never committed; `python-dotenv` (installed by `requirements.txt`) loads it at startup.
