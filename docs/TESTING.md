@@ -33,7 +33,7 @@ Two runs are compared:
 
 - [ ] Raspberry Pi 4B with the sensors wired per `HARDWARE_CONNECTIONS.md` (PIR→GPIO 17, LM393→GPIO 27, HC-SR04 TRIG/ECHO→GPIO 23/24)
 - [ ] `pigpiod` running (`sudo systemctl enable --now pigpiod`)
-- [ ] USB web camera connected
+- [ ] Raspberry Pi official USB camera connected
 - [ ] Both `.tflite` models present in `rpi_edge/` (`yolov8n_320_int8.tflite`, `yolov8n_640_int8.tflite`)
 - [ ] *(For the energy claim)* the inline USB-C power meter plugged between the charger and the Pi's USB-C port, showing live watts (no GPIO wiring, no software)
 - [ ] **Both nodes run with `--cloud` and `--snapshots` OFF.** The meter measures whole-Pi power, which includes the Wi-Fi radio and SD-card writes; `--cloud` (a Wi-Fi transmit burst every 20 s) and `--snapshots` (JPEG encode + SD write on each detection) add load only the adaptive node would carry — the baseline has neither path — biasing the energy comparison. Reserve both for live demos, never for a measured run.

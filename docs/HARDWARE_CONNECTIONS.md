@@ -16,7 +16,7 @@ This document covers every physical wire that needs to be made for the project. 
                                                                   │
                               USB-A port ──────────────────────── ┘
                                    │
-                          USB Web Camera (UVC)
+                   Raspberry Pi official USB camera
 ```
 
 All three sensors share the Pi's 5V / 3.3V / GND rails on the header. The HC-SR04's 5V ECHO line is the **only** signal that needs a voltage divider; every other signal pin is already 3.3 V-safe (see each section).
@@ -153,16 +153,16 @@ An earlier revision measured power with an INA219 shunt sensor tapped onto a pai
 
 ---
 
-## Section 5: Display & USB Web Camera → Raspberry Pi 4B
+## Section 5: Display & Raspberry Pi Official USB Camera → Raspberry Pi 4B
 
 The demo GUI window opens on a **monitor attached to the Pi's HDMI port** (use the micro-HDMI port nearest the USB-C/power corner on the Pi 4B). A monitor is only needed for the GUI — running the node with `--headless` requires no display.
 
 | From | To | Cable |
 |---|---|---|
 | HDMI monitor | Raspberry Pi 4B — micro-HDMI (HDMI0) | micro-HDMI → HDMI cable |
-| USB Web Camera | Raspberry Pi 4B — any USB-A port | Camera's own USB cable |
+| Raspberry Pi official USB camera | Raspberry Pi 4B — any USB-A port | Camera's own USB cable |
 
-Any UVC-compliant camera works without driver installation. Plug it in and it appears as `/dev/video0`. Verify with:
+The Raspberry Pi official USB camera is UVC-class and works without driver installation. Plug it in and it appears as `/dev/video0`. Verify with:
 ```bash
 ls /dev/video*
 ```
@@ -196,7 +196,7 @@ ls /dev/video*
 
 | Pi Port | Connected Device |
 |---|---|
-| Any USB-A | USB Web Camera |
+| Any USB-A | Raspberry Pi official USB camera |
 | micro-HDMI (HDMI0) | Monitor for the demo GUI *(omit if running `--headless`)* |
 
 ---

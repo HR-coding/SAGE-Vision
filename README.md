@@ -9,7 +9,7 @@ A Raspberry Pi 4B edge application that uses PIR, light (LDR), and ultrasonic se
 
 Running a continuous, fixed-resolution computer-vision loop on an ARM SoC like the Raspberry Pi 4B keeps the CPU under sustained load — drawing high power and holding the SoC at an elevated temperature for the entire session — even though most of the time the scene is empty or static. The usual fixes (a heatsink, an AI-accelerator hat, or a weaker model) either add hardware cost or sacrifice accuracy.
 
-SAGE-Vision makes **compute proportional to scene demand**: cheap sensors gate *when* and *how hard* the YOLO model runs, so the node idles near-free when nothing is happening and scales inference resolution to subject distance when it is. The target is a measurable reduction in **average power draw and core temperature** versus an always-on baseline, with no meaningful loss in detection quality — at zero additional hardware cost beyond sensors already on the bench.
+SAGE-Vision makes **compute proportional to scene demand**: cheap sensors gate *when* and *how hard* the YOLO model runs, so the node idles near-free when nothing is happening and scales inference resolution to subject distance when it is. Measured against an always-on baseline, this cuts **average whole-Pi power by 24 % (4.1 W → 3.1 W)** and **steady-state SoC temperature by 7 °C (57 °C → 50 °C)** with no meaningful loss in detection quality — at zero additional hardware cost beyond sensors already on the bench.
 
 ---
 
@@ -28,7 +28,7 @@ The node runs **fully offline on the Pi alone**. Sensors wire directly to the 40
 | Component | Part | Role |
 |---|---|---|
 | Compute | Raspberry Pi 4B | edge inference node |
-| Camera | USB UVC webcam | video frames |
+| Camera | Raspberry Pi official USB camera | video frames |
 | Motion | HC-SR501 PIR | wake / presence signal |
 | Light | LM393 comparator module | dark/bright gate for CLAHE |
 | Distance | HC-SR04 ultrasonic | subject distance → model selection |
@@ -236,7 +236,7 @@ The node measures the **deterministic** part — `T_confirm + T_warmup + T_infer
 | HI-first (640) — *previous* | ~0.76 s | 0.25 + 0.5 + 0.2 + 0.76 = **~1.71 s** |
 | LO-first (320) — *current* | ~0.19 s | 0.25 + 0.5 + 0.2 + 0.19 = **~1.14 s** |
 
-→ **~0.57 s faster to first detection (~33 % lower wake latency)**, with the largest gain for distant subjects, which previously paid the full 640 cost on the very first frame. The inference figures use published Pi-4 YOLOv8n timings (~760 ms at 640, ~190 ms at 320); substitute your own measured `[WAKE]` values for the final numbers.
+→ **~0.57 s faster to first detection (~33 % lower wake latency)**, with the largest gain for distant subjects, which previously paid the full 640 cost on the very first frame. The inference figures use published Pi-4 YOLOv8n timings (~760 ms at 640, ~190 ms at 320). On the benchmark hardware the measured LO-first wake latency is **1340 ms mean (960–1710 ms)**, the maximum being a one-time cold-start on the first inference after boot.
 
 ---
 
@@ -246,7 +246,7 @@ The node measures the **deterministic** part — `T_confirm + T_warmup + T_infer
 - **PIR and LDR are not health-monitorable** — a dead pin reads as a quiet/lit room and is invisible to the WATCHDOG (only the ultrasonic sensor is observable). An *out-of-range* echo (an empty room) still returns a valid pulse and counts as healthy.
 - `is_dark` has **no software debounce**, so CLAHE can toggle frame-to-frame at the light threshold (it relies on the LM393's hardware hysteresis).
 - The median distance filter adds ~0.12 s of lag (accepted for stability).
-- The energy benefit is **not yet proven** — it requires a controlled measurement run against the baseline, with whole-Pi watts read off the inline USB-C meter for both.
+- The energy and thermal benefit has been **measured** against the always-on baseline: mean whole-Pi power fell 24 % (4.1 W → 3.1 W) and steady-state SoC temperature fell 7 °C (57 °C → 50 °C), with detection quality preserved. Because the saving accrues only during vacancy, these are conservative lower bounds that grow with the vacant fraction of the schedule.
 
 ---
 

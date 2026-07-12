@@ -9,7 +9,7 @@ This document covers everything from flashing the OS to running the live pipelin
 ### Raspberry Pi Node
 - Raspberry Pi 4B (2 GB RAM minimum; 4 GB recommended)
 - MicroSD card (16 GB minimum, Class 10 / A1 rated)
-- USB Web Camera (UVC-compliant; plug-and-play, no drivers needed)
+- Raspberry Pi official USB camera (plug-and-play, no drivers needed)
 - A **display for the demo GUI** — either a physical **HDMI monitor** (+ keyboard) or remote **VNC** from your computer (see Phase 4). *(Not needed if you run with `--headless`.)*
 - Sensors wired **directly to the Pi's 40-pin GPIO header** as documented in `HARDWARE_CONNECTIONS.md`:
   - LM393 light comparator module — DO → **GPIO 27** (powered from 3.3V)
